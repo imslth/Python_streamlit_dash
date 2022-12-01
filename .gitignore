@@ -1,5 +1,4 @@
 .idea
-.streamlit
 _secret_auth_.json
 __pycache__
  page/__pycache__

@@ -30,8 +30,6 @@ class Base:
         cursor = self.conn.cursor()
         keys = str(list(context.keys()))[1:-1]
         values = list(context.values())
-        print(table)
-        print(context)
         str_get = f'INSERT INTO "{table}" ({keys}) VALUES ({("?," * len(values))[:-1]})'
 
         if len(values) == 7:
