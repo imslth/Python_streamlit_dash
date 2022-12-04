@@ -41,10 +41,10 @@ class MuiGraphs:
                 for item in st.session_state.address:
                     if item in newValue.props.children:
                         value = newValue.props.children.replace(item, '')[:-2]
-                if value in st.session_state.multiselect:
-                    st.session_state.multiselect.remove(value)
-                else:
-                    st.session_state.multiselect.append(value)
+                        if value in st.session_state.multiselect:
+                            st.session_state.multiselect.remove(value)
+                        else:
+                            st.session_state.multiselect.append(value)
 
             temp = list()
             num = list()
@@ -139,6 +139,7 @@ class MuiGraphs:
                     )
 
     def Table(self, content, key):
+
         with mui.Box(sx={"flex": 1, "minHeight": 0}):
             mui.DataGrid(
                 columns=content['col'],
@@ -161,8 +162,8 @@ class MuiGraphs:
                 keys=content['y'],
                 indexBy="country",
                 margin={'top': 50, 'right': 50, 'bottom': 50, 'left': 60},
-                padding=0.2,
-                innerPadding=2,
+                padding=0,
+                innerPadding=0,
                 valueScale={'type': 'linear'},
                 indexScale={'type': 'band', 'round': True},
                 colors={'scheme': 'nivo'},
@@ -170,7 +171,7 @@ class MuiGraphs:
                 borderColor={'theme': 'background'},
                 axisTop=None,
                 axisRight=None,
-                borderRadius=15,
+                borderRadius=2,
                 axisBottom={
                     'tickSize': 5,
                     'tickPadding': 5,
@@ -212,15 +213,16 @@ class MuiGraphs:
                          'color': "#FFFFFF" if st.session_state[f'{key}_st'] == 0 else "#252526", }):
 
             def handle_change(event, newValue):
-                for item in st.session_state.address:
+                for i, item in enumerate(st.session_state.selectaddress):
                     if item in newValue.props.children:
+                        st.session_state.select_coordinates = st.session_state.selectcoordinates[i]
                         value = newValue.props.children.replace(item, '')[:-2]
-                st.session_state.select = value
+                        st.session_state.select = value
 
             temp = list()
 
-            for i, item in enumerate(st.session_state.list):
-                temp.append(mui.MenuItem(f'{st.session_state.list[i]}, {st.session_state.address[i]}', value=i))
+            for i, item in enumerate(st.session_state.selectlist):
+                temp.append(mui.MenuItem(f'{st.session_state.selectlist[i]}, {st.session_state.selectaddress[i]}', value=i))
 
             ITEM_HEIGHT = 48
             ITEM_PADDING_TOP = 8
@@ -292,7 +294,7 @@ class MuiGraphs:
         with mui.Box(sx={"flex": 1, "minHeight": 0}):
             nivo.Line(
                 data=content,
-                margin={'top': 50, 'right': 200, 'bottom': 20, 'left': 50},
+                margin={'top': 50, 'right': 50, 'bottom': 50, 'left': 50},
                 yFormat=" >-.2f",
                 axisTop=None,
                 axisRight=None,
@@ -330,17 +332,17 @@ class MuiGraphs:
                 useMesh=True,
                 legends=[
                     {
-                        'anchor': 'right',
-                        'direction': 'column',
+                        'anchor': 'top',
+                        'direction': 'row',
                         'justify': False,
-                        'translateX': 100,
-                        'translateY': 0,
+                        'translateX': 0,
+                        'translateY': -15,
                         'itemsSpacing': 0,
-                        'itemDirection': 'left-to-right',
+                        'itemDirection': 'bottom-to-top',
                         'itemWidth': 80,
-                        'itemHeight': 20,
+                        'itemHeight': 10,
                         'itemOpacity': 0.75,
-                        'symbolSize': 12,
+                        'symbolSize': 17,
                         'symbolShape': 'circle',
                         'symbolBorderColor': 'rgba(0, 0, 0, .5)',
                         'effects': [
@@ -354,7 +356,6 @@ class MuiGraphs:
                         ]
                     }
                 ])
-
 
     def Calendar(self, content, key):
         with mui.Box(sx={"flex": 1, "minHeight": 0}):
@@ -456,3 +457,43 @@ class MuiGraphs:
                 container=True,
                 spacing=2,
             )
+
+    def Pie(self, content, key):
+        with mui.Box(sx={"flex": 1, "minHeight": 0}):
+            nivo.Pie(
+                data=content,
+                margin={'top': 50, 'right': 50, 'bottom': 50, 'left': 50},
+                startAngle=90,
+                endAngle=-90,
+                innerRadius=0.5,
+                padAngle=1,
+                cornerRadius=5,
+                activeInnerRadiusOffset=20,
+                activeOuterRadiusOffset=20,
+                borderColor={
+                    'from': 'color',
+                    'modifiers': [
+                        [
+                            'darker',
+                            0.2
+                        ]
+                    ]
+                },
+                arcLinkLabelsSkipAngle=10,
+                arcLinkLabelsTextColor="#FFFFFF" if st.session_state[f'{key}_st'] == 0 else "#252526",
+                arcLinkLabelsColor={
+                    'from': 'color', 'modifiers': []},
+                arcLabel="value",
+                arcLabelsTextColor={
+                    'from': 'color',
+                    'modifiers': [
+                        [
+                            'darker',
+                            2
+                        ]
+                    ]
+                },
+                motionConfig="molasses",
+                theme=self.themes['dark' if st.session_state[f'{key}_st'] == 0 else 'light'])
+
+

@@ -51,3 +51,5 @@ class Mui:
             if key == 'votes_calendar': MuiGraphs().Calendar(content, key)
             if key == 'reviews_like': MuiGraphs().Reviews(content, key)
             if key == 'reviews_dislike': MuiGraphs().Reviews(content, key)
+            if key == 'pie_related': MuiGraphs().Pie(content, key)
+            if key == 'network': MuiGraphs().Network(content, key)

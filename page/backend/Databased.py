@@ -1,11 +1,21 @@
 import sqlite3
 import os
+
+import pandas
 import streamlit as st
 
 
 class Base:
 
     def __init__(self):
+        self.text_past = list()
+        self.text_present = list()
+        self.uniq_past = list()
+        self.uniq_present = list()
+        self.coordinates_present = list()
+        self.coordinates_past = list()
+        self.project_present = list()
+        self.project_past = list()
         self.urls = list()
         self.result_past = list()
         self.result_present = list()
@@ -25,51 +35,82 @@ class Base:
         self.conn.commit()
         self.conn.close()
 
-
-    def create_new_items(self, table=None, context=None):
+    def create_new_items(self, table, context):
         cursor = self.conn.cursor()
         keys = str(list(context.keys()))[1:-1]
         values = list(context.values())
         str_get = f'INSERT INTO "{table}" ({keys}) VALUES ({("?," * len(values))[:-1]})'
 
         if len(values) == 7:
-            data_get = (
-                [values[0], values[1], values[2], values[3], values[4], values[5], values[6]])
-            cursor.execute(str_get, data_get)
-            self.conn.commit()
+            check = cursor.execute(f'SELECT * FROM "{table}" WHERE coordinates=? AND now=?', ([values[1], values[6]]))
+            check_list = check.fetchall()
+            if check_list:
+                pass
+            else:
+                data_get = (
+                    [values[0], values[1], values[2], values[3], values[4], values[5], values[6]])
+                cursor.execute(str_get, data_get)
+                self.conn.commit()
 
         if len(values) == 8:
             for i in range(len(values[0])):
-                data_get = (
-                    [values[0][i], values[1][i], values[2][i], values[3][i], values[4][i], values[5][i], values[6][i],
-                     values[7][i]])
-                cursor.execute(str_get, data_get)
-                self.conn.commit()
+                check = cursor.execute(f'SELECT * FROM "{table}" WHERE aspect_text=? AND coordinates=? AND now=?',
+                                       ([values[0][i], values[6][i], values[7][i]]))
+                check_list = check.fetchall()
+                if check_list:
+                    pass
+                else:
+                    data_get = (
+                        [values[0][i], values[1][i], values[2][i], values[3][i], values[4][i], values[5][i],
+                         values[6][i],
+                         values[7][i]])
+                    cursor.execute(str_get, data_get)
+                    self.conn.commit()
 
         if len(values) == 6:
             for i in range(len(values[0])):
-                data_get = ([values[0][i], values[1][i], values[2][i], values[3][i], values[4][i], values[5][i]])
-                cursor.execute(str_get, data_get)
-                self.conn.commit()
+                check = cursor.execute(
+                    f'SELECT * FROM "{table}" WHERE coordinates=? AND related_coordinates=? AND now=?',
+                    ([values[1][i], values[3][i], values[5][i]]))
+                check_list = check.fetchall()
+                if check_list:
+                    pass
+                else:
+                    data_get = ([values[0][i], values[1][i], values[2][i], values[3][i], values[4][i], values[5][i]])
+                    cursor.execute(str_get, data_get)
+                    self.conn.commit()
 
         if len(values) == 10:
             for i in range(len(values[0])):
-                data_get = (
-                    [values[0][i], values[1][i], values[2][i], values[3][i], values[4][i], values[5][i], values[6][i],
-                     values[7][i], values[8][i], values[9][i]])
-                cursor.execute(str_get, data_get)
-                self.conn.commit()
-
+                check = cursor.execute(f'SELECT * FROM "{table}" WHERE reviews_text=? AND coordinates=? ',
+                                       ([values[0][i], values[8][i]]))
+                check_list = check.fetchall()
+                if check_list:
+                    pass
+                else:
+                    data_get = (
+                        [values[0][i], values[1][i], values[2][i], values[3][i], values[4][i], values[5][i],
+                         values[6][i],
+                         values[7][i], values[8][i], values[9][i]])
+                    cursor.execute(str_get, data_get)
+                    self.conn.commit()
 
     def read_all(self, table,
-                 date_present, project, date_past=None):
+                 date_present, project, date_past=None, coordinates=None):
         cursor_past = self.conn.cursor()
         cursor_present = self.conn.cursor()
         for item in project:
-            info_past = cursor_past.execute(f'SELECT * FROM "{table}" WHERE now=? AND project=?',
-                                            ([date_past, item]))
-            info_present = cursor_present.execute(f'SELECT * FROM "{table}" WHERE now=? AND project=?',
-                                                  ([date_present, item]))
+            if coordinates:
+                info_past = cursor_past.execute(f'SELECT * FROM "{table}" WHERE now=? AND project=? AND coordinates=?',
+                                                ([date_past, item, coordinates]))
+                info_present = cursor_present.execute(
+                    f'SELECT * FROM "{table}" WHERE now=? AND project=? AND coordinates=?',
+                    ([date_present, item, coordinates]))
+            else:
+                info_past = cursor_past.execute(f'SELECT * FROM "{table}" WHERE now=? AND project=?',
+                                                ([date_past, item]))
+                info_present = cursor_present.execute(f'SELECT * FROM "{table}" WHERE now=? AND project=?',
+                                                      ([date_present, item]))
             past = info_past.fetchall()
             present = info_present.fetchall()
             for items in past:
@@ -77,10 +118,12 @@ class Base:
             for items in present:
                 self.result_present.append(items)
         self.conn.close()
-        content = {'past': self.result_past, 'present': self.result_present}
+        self.uniq_past = list(set(self.result_past))
+        self.uniq_present = list(set(self.result_present))
+        content = {'past': self.uniq_past, 'present': self.uniq_present}
         return content
 
-    def min_max_date(self, table='yandex_all'):
+    def min_max_date(self, table):
         cursor_min = self.conn.cursor()
         cursor_max = self.conn.cursor()
         info_min = cursor_min.execute(f'SELECT now FROM "{table}" ORDER BY now ASC LIMIT 1')
@@ -97,19 +140,27 @@ class Base:
                     date_present=None):
         cursor_past = self.conn.cursor()
         cursor_present = self.conn.cursor()
-        info_past = cursor_past.execute(f'SELECT project,address FROM "{table}" WHERE now=?', ([date_past]))
-        info_present = cursor_present.execute(f'SELECT project,address FROM "{table}" WHERE now=?', ([date_present]))
-        past = info_past.fetchall()
-        present = info_present.fetchall()
+        info_past = cursor_past.execute(f'SELECT project,address,coordinates,count_text FROM "{table}" WHERE now=?',
+                                        ([date_past]))
+        info_present = cursor_present.execute(f'SELECT project,address,coordinates,count_text FROM "{table}" WHERE now=?',
+                                              ([date_present]))
+        past = list(set(info_past.fetchall()))
+        present = list(set(info_present.fetchall()))
         self.conn.close()
         for project in past:
+            self.coordinates_past.append(project[2])
             self.address_past.append(project[1])
-            self.result_past.append(project[0])
+            self.project_past.append(project[0])
+            self.text_past.append(project[3])
         for project in present:
+            self.coordinates_present.append(project[2])
             self.address_present.append(project[1])
-            self.result_present.append(project[0])
-        content = {'past': self.result_past, 'present': self.result_present, 'address_past': self.address_past,
-                   'address_present': self.address_present}
+            self.project_present.append(project[0])
+            self.text_present.append(project[3])
+        content = {'project_past': self.project_past, 'project_present': self.project_present,
+                   'address_past': self.address_past, 'text_past':self.text_past,
+                   'address_present': self.address_present, 'coordinates_past': self.coordinates_past,
+                   'coordinates_present': self.coordinates_present, 'text_present':self.text_present}
         return content
 
     def all_project_related(self, table,
@@ -143,44 +194,61 @@ class Base:
         content = {'all': content_all, 'related': content_related}
         return content
 
-    def all_rating(self, table='yandex_all', project=None):
+    def all_rating(self, table, project, coordinates):
         cursor = self.conn.cursor()
-        info = cursor.execute(f'SELECT rating,now FROM "{table}" WHERE project=?', ([project]))
-        content = info.fetchall()
+        info = cursor.execute(f'SELECT rating,now FROM "{table}" WHERE project=? AND coordinates=?',
+                              ([project, coordinates]))
+        result = info.fetchall()
         self.conn.close()
+        temp = list(set(result))
+        df = pandas.DataFrame(temp, columns=['rating', 'date'])
+        df = df.sort_values(by=['date'])
+        content = df.values.tolist()
         return content
 
-    def rating_related(self, table, project=None):
-        cursor = self.conn.cursor()
-        info = cursor.execute(f'SELECT related_project,related_rating,now FROM "{table}" WHERE project=?', ([project]))
-        content = info.fetchall()
-        self.conn.close()
-        return content
-
-    def count_all_votes_reviews(self, table, project=None):
-        cursor = self.conn.cursor()
-        info = cursor.execute(f'SELECT count_text,count_vote,now FROM "{table}" WHERE project=?', ([project]))
-        content = info.fetchall()
-        self.conn.close()
-        return content
-
-    def reviews(self, table, project, date_present):
-        cursor = self.conn.cursor()
-        info = cursor.execute(f'SELECT reviews_text FROM "{table}" WHERE project=? AND now=?',
-                              ([project, date_present]))
-        content = info.fetchall()
-        self.conn.close()
-        return content
-
-    def read_count_reviews(self, table, project=None):
+    def rating_related(self, table, project, coordinates, date_present):
         cursor = self.conn.cursor()
         info = cursor.execute(
-            f'SELECT aspect_positive,aspect_neutral,aspect_negative,now FROM "{table}" WHERE project=?', ([project]))
+            f'SELECT related_project,related_rating,now FROM "{table}" WHERE project=? AND coordinates=? AND now=?',
+            ([project, coordinates, date_present]))
+        result = info.fetchall()
+        self.conn.close()
+        return result
+
+    def count_all_votes_reviews(self, table, project, coordinates):
+        cursor = self.conn.cursor()
+        info = cursor.execute(f'SELECT count_text,count_vote,now FROM "{table}" WHERE project=? AND coordinates=?',
+                              ([project, coordinates]))
         content = info.fetchall()
         self.conn.close()
         return content
 
-    def read_url(self,table):
+    def reviews(self, table, project, coordinates):
+        cursor = self.conn.cursor()
+        info = cursor.execute(f'SELECT reviews_text FROM "{table}" WHERE project=? AND coordinates=?',
+                              ([project, coordinates]))
+        content = info.fetchall()
+        self.conn.close()
+        return content
+
+    def reviews_all(self, table, project, coordinates):
+        cursor = self.conn.cursor()
+        info = cursor.execute(f'SELECT * FROM "{table}" WHERE project=? AND coordinates=?',
+                                  ([project,coordinates]))
+        content = info.fetchall()
+        self.conn.close()
+        return content
+
+    def read_count_reviews(self, table, project, coordinates):
+        cursor = self.conn.cursor()
+        info = cursor.execute(
+            f'SELECT aspect_positive,aspect_neutral,aspect_negative,now FROM "{table}" WHERE project=? AND coordinates=?',
+            ([project, coordinates]))
+        content = info.fetchall()
+        self.conn.close()
+        return content
+
+    def read_url(self, table):
         table = f'{table}_url'
         cursor = self.conn.cursor()
         info = cursor.execute(
@@ -190,4 +258,3 @@ class Base:
             content.append(item[0])
         self.conn.close()
         return content
-

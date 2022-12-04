@@ -5,12 +5,10 @@ from .backend.Load_Data import load_yandex_all, load_yandex_aspect, load_aspect_
     load_yandex_related_rating, load_yandex_count_votes_reviews, load_reviews
 import streamlit as st
 from .backend.Graphs_Data import data_Table, data_BarRating, data_BarReviews, data_RadianBar, data_LineReviews, \
-    data_LineRating, data_Calendar, data_Reviews
-
+    data_LineRating, data_Calendar, data_Reviews, data_Pie
 
 
 def main():
-
     Session_state()
 
     with elements("dashboard"):
@@ -23,11 +21,17 @@ def main():
             dashboard.Item('select', 0, 5, 4, 1),
             dashboard.Item('radian_reviews', 4, 5, 6, 3),
             dashboard.Item('line_reviews', 0, 6, 4, 2),
-            dashboard.Item('line_rating', 0, 8, 12, 3),
+
+            dashboard.Item('line_rating', 0, 8, 4, 2),
+            dashboard.Item('pie_related', 4, 8, 6, 2),
+
+
             dashboard.Item('reviews_calendar', 0, 11, 12, 2),
             dashboard.Item('votes_calendar', 0, 13, 12, 2),
             dashboard.Item('reviews_like', 0, 15, 5, 3),
             dashboard.Item('reviews_dislike', 5, 15, 5, 3),
+
+            dashboard.Item('network', 0, 18, 6, 3),
         ]
 
         with dashboard.Grid(layout):
@@ -54,27 +58,36 @@ def main():
                                                          date_present=st.session_state.date_present.strftime(
                                                              "%Y-%m-%d"),
                                                          date_past=st.session_state.date_past.strftime("%Y-%m-%d"),
-                                                         project=[st.session_state.select])
+                                                         project=[st.session_state.select],
+                                                         coordinates=st.session_state.select_coordinates)
 
             dash('radian_reviews', 'Группировка отзывов по тематикам', content=data_RadianBar(data_load_yandex_aspect))
 
             data_load_aspect_count = load_aspect_count(table=f'{st.session_state.option}_aspect',
-                                                       project=st.session_state.select)
+                                                       project=st.session_state.select,
+                                                       coordinates=st.session_state.select_coordinates)
 
             dash('line_reviews', 'Динамика изменения тональности отзывов',
                  content=data_LineReviews(data=data_load_aspect_count))
 
             data_load_yandex_all_rating = load_yandex_all_rating(table=f'{st.session_state.option}_all',
-                                                                 project=st.session_state.select)
+                                                                 project=st.session_state.select,
+                                                                 coordinates=st.session_state.select_coordinates)
             data_load_yandex_related_rating = load_yandex_related_rating(table=f'{st.session_state.option}_related',
-                                                                         project=st.session_state.select)
-            data = {'1': data_load_yandex_all_rating, '2': data_load_yandex_related_rating}
+                                                                         project=st.session_state.select,
+                                                                         coordinates=st.session_state.select_coordinates,
+                                                                         date_present=st.session_state.max_time)
+
+            data = {'project': data_load_yandex_all_rating, 'related': data_load_yandex_related_rating}
 
             dash('line_rating', 'Динамика изменения рейтинга', content=data_LineRating(data))
 
+            dash('pie_related', 'Рейтинг конкурентов', content=data_Pie(data))
+
             data_load_yandex_count_votes_reviews = load_yandex_count_votes_reviews(
                 table=f'{st.session_state.option}_all',
-                project=st.session_state.select)
+                project=st.session_state.select,
+                coordinates=st.session_state.select_coordinates)
 
             content_calendar = data_Calendar(data_load_yandex_count_votes_reviews)
 
@@ -85,14 +98,14 @@ def main():
                  content=content_calendar['votes'])
 
             data_load_reviews = load_reviews(table=f'{st.session_state.option}_reviews',
-                                             date_present=st.session_state.max_time,
-                                             project=[st.session_state.select])
+                                             project=st.session_state.select, coordinates=st.session_state.select_coordinates)
 
             content_reviews = data_Reviews(data_load_reviews)
 
             dash('reviews_like', 'Самый популярный отзыв', content=content_reviews['like'])
 
             dash('reviews_dislike', 'Самый непопулярный отзыв', content=content_reviews['dislike'])
+
 
 
 if __name__ == '__main__':
