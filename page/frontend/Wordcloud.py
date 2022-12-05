@@ -1,6 +1,6 @@
 from .Highcharts import custom_grid
 
-
+# Генерация облака слов через https://www.highcharts.com/
 def main(content, project):
     Wordcloud = {
         'accessibility': {

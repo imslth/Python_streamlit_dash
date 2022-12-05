@@ -7,10 +7,11 @@ import streamlit as st
 from .backend.Graphs_Data import data_Table, data_BarRating, data_BarReviews, data_RadianBar, data_LineReviews, \
     data_LineRating, data_Calendar, data_Reviews, data_Pie
 
-
+# Страница с дашбордом и react компонентами.
 def main():
     Session_state()
-
+    # Сначала мы создаем элемент дашборд, в котором инициируем элементы и присваиваем им ключи и размеры. Все элементы
+    # мы делаем изменяемыми по размеру и перетаскиваемыми.
     with elements("dashboard"):
         layout = [
             dashboard.Item('slider', 0, 0, 3, 1),
@@ -21,26 +22,27 @@ def main():
             dashboard.Item('select', 0, 5, 4, 1),
             dashboard.Item('radian_reviews', 4, 5, 6, 3),
             dashboard.Item('line_reviews', 0, 6, 4, 2),
-
             dashboard.Item('line_rating', 0, 8, 4, 2),
             dashboard.Item('pie_related', 4, 8, 6, 2),
-
-
             dashboard.Item('reviews_calendar', 0, 11, 12, 2),
             dashboard.Item('votes_calendar', 0, 13, 12, 2),
             dashboard.Item('reviews_like', 0, 15, 5, 3),
-            dashboard.Item('reviews_dislike', 5, 15, 5, 3),
-
-            dashboard.Item('network', 0, 18, 6, 3),
+            dashboard.Item('reviews_dislike', 5, 15, 5, 3)
         ]
 
+        # В самом дашборде мы вызываем функции обрабатывания данных для графиков, которые отправляем дальше на рендер.
+        # Аргументы (на примере) dash(key,name,content): dash - вызов класса, key - ключ окна, name - название окна
+        # (отображается в дашборде), content - данные для рендеринга (обычно представляется в виде func(data), т.е.
+        # данные для рендеринга берутся из функции, которая обрабатывает под определенный график общие данные из БД).
         with dashboard.Grid(layout):
             dash = Mui()
 
-            dash('slider', name='Выбор Даты')
+            # В слайдере и мультиселекте у нас используются глобальные переменные, мы туда ничего не отправляем.
+            dash('slider', 'Выбор Даты')
 
             dash('multiselect', 'Выбор проектов')
 
+            # Загрузка данных из БД для всех графиков, которые зависят от multiselect и slider.
             data_load_yandex_all = load_yandex_all(table=f'{st.session_state.option}_all',
                                                    date_present=st.session_state.date_present.strftime("%Y-%m-%d"),
                                                    date_past=st.session_state.date_past.strftime("%Y-%m-%d"),
@@ -52,6 +54,8 @@ def main():
 
             dash('bar_reviews', 'Распределение по кол-ву отзывов', content=data_BarReviews(data_load_yandex_all))
 
+            # Дальше все данные для единично выбранного проекта в select. Здесь во всех выгрузках из БД используется
+            # максимальная дата (считай последняя дата парсинга).
             dash('select', 'Выбор проекта')
 
             data_load_yandex_aspect = load_yandex_aspect(table=f'{st.session_state.option}_aspect',

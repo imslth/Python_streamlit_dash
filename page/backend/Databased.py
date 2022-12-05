@@ -5,6 +5,7 @@ import pandas
 import streamlit as st
 
 
+# класс для выгрузки/загрузки из БД
 class Base:
 
     def __init__(self):
@@ -26,6 +27,7 @@ class Base:
         DB_DIR = os.path.join(BASE_DIR, 'DB/base.db')
         self.conn = sqlite3.connect(DB_DIR, check_same_thread=False)
 
+    # функция для добавления новой ссылки в таблицу с url
     def create_new_url(self, table, url):
         table = f'{table}_url'
         cursor = self.conn.cursor()
@@ -35,6 +37,11 @@ class Base:
         self.conn.commit()
         self.conn.close()
 
+    # Функция для добавления данных в остальные таблицы. В зависимости от количества элементов данные записываются
+    # в определенную таблицу. Перед записью в каждой таблице происходит проверка наличия данных в этой таблице.
+    # Чаще всего проверка осуществляется по координатам объекта и дате добавления. Опционально добавляются остальные
+    # элементы (текст и т.д.). Все таблицы каждый день записывают новые данные, исключением является только таблица
+    # с отзывами - там данные добавляются только при обнаружении новых отзывов и данные не привязаны к дате.
     def create_new_items(self, table, context):
         cursor = self.conn.cursor()
         keys = str(list(context.keys()))[1:-1]
@@ -95,6 +102,8 @@ class Base:
                     cursor.execute(str_get, data_get)
                     self.conn.commit()
 
+    # Функция для считывания всех данных с любой таблицы. Есть несколько версий - где происходит проверка по
+    # наличию координат в таблице и без неё. Здесь выгружаются данные по двум датам одновременно - было и стало.
     def read_all(self, table,
                  date_present, project, date_past=None, coordinates=None):
         cursor_past = self.conn.cursor()
@@ -123,6 +132,7 @@ class Base:
         content = {'past': self.uniq_past, 'present': self.uniq_present}
         return content
 
+    # Функция выгрузки крайних дат с БД. По этим датам мы определяем временной промежуток в slider.
     def min_max_date(self, table):
         cursor_min = self.conn.cursor()
         cursor_max = self.conn.cursor()
@@ -136,14 +146,16 @@ class Base:
         content = {'min': result_min, 'max': result_max}
         return content
 
+    # Функция для выгрузки названия всех проектов с БД. Данные нужны для отображения их в Select.
     def all_project(self, table, date_past=None,
                     date_present=None):
         cursor_past = self.conn.cursor()
         cursor_present = self.conn.cursor()
         info_past = cursor_past.execute(f'SELECT project,address,coordinates,count_text FROM "{table}" WHERE now=?',
                                         ([date_past]))
-        info_present = cursor_present.execute(f'SELECT project,address,coordinates,count_text FROM "{table}" WHERE now=?',
-                                              ([date_present]))
+        info_present = cursor_present.execute(
+            f'SELECT project,address,coordinates,count_text FROM "{table}" WHERE now=?',
+            ([date_present]))
         past = list(set(info_past.fetchall()))
         present = list(set(info_present.fetchall()))
         self.conn.close()
@@ -158,11 +170,12 @@ class Base:
             self.project_present.append(project[0])
             self.text_present.append(project[3])
         content = {'project_past': self.project_past, 'project_present': self.project_present,
-                   'address_past': self.address_past, 'text_past':self.text_past,
+                   'address_past': self.address_past, 'text_past': self.text_past,
                    'address_present': self.address_present, 'coordinates_past': self.coordinates_past,
-                   'coordinates_present': self.coordinates_present, 'text_present':self.text_present}
+                   'coordinates_present': self.coordinates_present, 'text_present': self.text_present}
         return content
 
+    # Функция для выгрузки названия всех конкурентных комплексов
     def all_project_related(self, table,
                             date_present, date_past=None):
         cursor_past = self.conn.cursor()
@@ -179,6 +192,8 @@ class Base:
         content = {'past': self.result_past, 'present': self.result_present}
         return content
 
+    # Функция для выгрузки данных только для отображения карты. Здесь нам необходимы только название проекта, координаты
+    # и рейтинг объекта
     def maps(self, date_present):
         cursor_all = self.conn.cursor()
         cursor_related = self.conn.cursor()
@@ -194,6 +209,7 @@ class Base:
         content = {'all': content_all, 'related': content_related}
         return content
 
+    # Функция для выгрузки данных о рейтинге объекта в определенную дату
     def all_rating(self, table, project, coordinates):
         cursor = self.conn.cursor()
         info = cursor.execute(f'SELECT rating,now FROM "{table}" WHERE project=? AND coordinates=?',
@@ -206,6 +222,7 @@ class Base:
         content = df.values.tolist()
         return content
 
+    # Функция для выгрузки данных о рейтинге конкурирующих объектов
     def rating_related(self, table, project, coordinates, date_present):
         cursor = self.conn.cursor()
         info = cursor.execute(
@@ -215,6 +232,7 @@ class Base:
         self.conn.close()
         return result
 
+    # Функция для выгрузки данных об кол-ве текстов и оценок о проекте
     def count_all_votes_reviews(self, table, project, coordinates):
         cursor = self.conn.cursor()
         info = cursor.execute(f'SELECT count_text,count_vote,now FROM "{table}" WHERE project=? AND coordinates=?',
@@ -223,6 +241,7 @@ class Base:
         self.conn.close()
         return content
 
+    # Функция для выгрузки отзывов о проекте
     def reviews(self, table, project, coordinates):
         cursor = self.conn.cursor()
         info = cursor.execute(f'SELECT reviews_text FROM "{table}" WHERE project=? AND coordinates=?',
@@ -231,14 +250,16 @@ class Base:
         self.conn.close()
         return content
 
+    # Функция для выгрузки всех данных из таблицы отзывов (отзывы, дата публикации, кол-во лайков, дизлайков и т.д.)
     def reviews_all(self, table, project, coordinates):
         cursor = self.conn.cursor()
         info = cursor.execute(f'SELECT * FROM "{table}" WHERE project=? AND coordinates=?',
-                                  ([project,coordinates]))
+                              ([project, coordinates]))
         content = info.fetchall()
         self.conn.close()
         return content
 
+    # Функция для выгрузки данных об кол-ве текстов и их тематик по проекту
     def read_count_reviews(self, table, project, coordinates):
         cursor = self.conn.cursor()
         info = cursor.execute(
@@ -248,6 +269,7 @@ class Base:
         self.conn.close()
         return content
 
+    # Функция для выгрузки ссылок для парсинга
     def read_url(self, table):
         table = f'{table}_url'
         cursor = self.conn.cursor()

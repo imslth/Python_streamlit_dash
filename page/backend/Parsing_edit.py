@@ -1,9 +1,9 @@
 from datetime import datetime
 from .Databased import Base
 
-
+# Класс для обработки данных парсера.
 class EditParse:
-
+    # Инициируем множество переменных
     def __init__(self):
         self.context_aspect = dict()
         self.context_related_place = dict()
@@ -42,18 +42,23 @@ class EditParse:
         self.now = datetime.now().strftime("%Y-%m-%d")
 
     def Edit(self, content, project):
-
+        # Данные с карт приходят не всегда в одинаковом виде. Почему-то на отдельных объектах получаемый json отличается
+        # от тех, которые приходят обычно - в них меньше данных и отсутствуют некоторые ключи. Чтобы эти данные
+        # не вызывали ошибку ловим их в исключении и обрабатываем там. Мы получим меньше данных (там нет отзывов,
+        # например), но основная информация присутствует.
         try:
             self.try_edit(content)
         except Exception as ex:
             self.ex_edit(content)
 
+        # Отправка полученных данных на запись в БД.
         base = Base()
         base.create_new_items(table=f'{project}_all', context=self.out['all'])
         base.create_new_items(table=f'{project}_related', context=self.out['related'])
         base.create_new_items(table=f'{project}_reviews', context=self.out['reviews'])
         base.create_new_items(table=f'{project}_aspect', context=self.out['aspect'])
 
+    # Разбираем полученный json и формируем 4 словаря с данными для 4ех таблиц.
     def try_edit(self, data):
 
         for item in data['stack'][0]['results']['items']:
@@ -155,6 +160,7 @@ class EditParse:
         self.out = {'all': self.context_all, 'related': self.context_related_place, 'aspect': self.context_aspect,
                     'reviews': self.context_reviews}
 
+    # При отказе - также разбираем полученный json и формируем 4 словаря с данными для 4ех таблиц.
     def ex_edit(self, data):
 
         for item in data['stack'][0]['response']['items']:

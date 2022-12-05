@@ -4,7 +4,7 @@ from page.backend.Parsing_edit import EditParse
 import json
 from page.backend.Parsing_custom_setting import SETTING
 
-
+# Паук scrapy для парсинга объектов недвижимости
 class QuotesSpider(scrapy.Spider):
     name = "developer"
     func = Base()

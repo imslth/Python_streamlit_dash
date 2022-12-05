@@ -5,6 +5,7 @@ from .backend.Graphs_Data import data_foliumMap
 from .backend.Load_Data import load_maps
 
 
+# Отображение страницы с картой
 def main():
     Session_state()
 

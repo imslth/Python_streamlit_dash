@@ -3,6 +3,9 @@ import streamlit as st
 from keybert import KeyBERT
 
 
+# Почти все функции - получение данных из БД. Обернуты в st.cache, чтобы данные хранились в кэше и не инициировались
+# заново при запросе. Функция срабатывает только тогда, когда изменяются входные параметры.
+
 @st.cache(allow_output_mutation=True)
 def load_model():
     return KeyBERT("distilbert-base-nli-mean-tokens")
@@ -84,6 +87,8 @@ def load_reviews_wordcloud(project, coordinates):
     return data
 
 
+# Только функция выгрузки данных для карт не хранится в кэше т.к. у нее только один входной параметр, который
+# не изменяется
 def load_maps(date_present):
     data = Base().maps(date_present=date_present)
     return data

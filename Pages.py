@@ -1,7 +1,7 @@
 import streamlit as st
 from typing import Callable, Optional
 
-
+# Класс для многостраничного приложения. Нагло взят с https://github.com/okld/streamlit-elements
 def page_group(param):
     key = f"page_group_{param}"
     if key not in st.session_state:

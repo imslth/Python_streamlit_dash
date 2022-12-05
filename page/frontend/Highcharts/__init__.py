@@ -8,6 +8,12 @@ _component_func = components.declare_component(
 )
 
 
+
+# Это полная библиотека https://github.com/aalteirac/streamlit_highcharts. Изначально здесь не был подключен js скрипт
+# по генерации wordcloud. Я добавил этот скрипт и занес библиотеку с этими изменениями к себе. Все возможные диаграммы,
+# которые можно отобразить - https://www.highcharts.com/. Хотя может здесь и не добавлены все js скрипты.
+
+
 def custom_grid(
         options=None,
         height=410,
@@ -22,14 +28,3 @@ def custom_grid(
 
     return component_value
 
-# def main():
-#     st.write("## Example")
-#     selSample=st.selectbox("Choose a sample",[SAMPLE,SAMPLE2,SAMPLE3,SAMPLE4,SAMPLE5,SAMPLE6,SAMPLE7,SAMPLE8,SAMPLE9,SAMPLE10],format_func=lambda x: str(x["title"]["text"])
-# )
-#     value = streamlit_highcharts(selSample,640)
-#     with st.expander("Show code...",expanded=False):
-#         st.code(str(selSample).replace("},","},\r\n"),language="python")
-
-
-# if __name__ == "__main__":
-#     main()

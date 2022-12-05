@@ -2,7 +2,8 @@ import pandas
 import streamlit as st
 import seaborn as sns
 
-
+# Функция для формирования таблицы основных ключевых слов по Bert.
+# Взято с https://github.com/streamlit/example-app-bert-keyword-extractor
 def main(content):
     df = (
         pandas.DataFrame(content, columns=["Ключевые слова", "Актуальность"])

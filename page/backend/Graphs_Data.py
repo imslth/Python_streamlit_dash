@@ -3,9 +3,11 @@ import streamlit as st
 import re
 from .Stopwords import stopwords
 from .Load_Data import load_model
-from rutermextract import TermExtractor
 
 
+# Обработка данных для их отображения на карте. Координаты в БД занесены в виде string '[51.234,43.123]', а карты
+# воспринимают координаты в обратном порядке (т.е. сначала 43.123, а потом 51.234). Т.е. нам необходимо вырезать сами
+# координаты из строки, поменять их местами и занести в список.
 def data_foliumMap(data):
     content_all = pandas.DataFrame(data['all'], columns=['project', 'coordinates', 'address', 'rating'])
     content_related = pandas.DataFrame(data['related'],
@@ -26,6 +28,9 @@ def data_foliumMap(data):
     return content
 
 
+# Отображение данных в динамической таблице на странице dashboard. Т.к. мы тут показываем динамику (т.е. разницу в
+# показателях между датами), то получился большой код с добавлением данных было и стало, расчетом разницы между ними и
+# удалением столбцов с данными было/стало.
 def data_Table(data):
     data_present = data['present']
     data_past = data['past']
@@ -82,6 +87,9 @@ def data_Table(data):
     return content
 
 
+# Обработка данных для предоставления в столбчатой диаграмме (здесь данные о рейтинге). Здесь идет группировка данных
+# по значениям, поэтому создается много временных словарей. Может это можно было сделать проще через lambda функции,
+# но я не знаю как. В конце концов все сводится к созданию словаря с координатами x и y
 def data_BarRating(data):
     data = data['present']
     rat45 = dict()
@@ -127,6 +135,9 @@ def data_BarRating(data):
     return content
 
 
+# Обработка данных для предоставления в столбчатой диаграмме (здесь данные о кол-ве отзывов). Здесь идет группировка
+# данных по значениям, поэтому создается много временных словарей. Может это можно было сделать проще через lambda
+# функции, но я не знаю как. В конце концов все сводится к созданию словаря с координатами x и y
 def data_BarReviews(data):
     data = data['present']
     rev100 = dict()
@@ -165,6 +176,7 @@ def data_BarReviews(data):
     return content
 
 
+# Данные для предоставления диаграммы с распределением отзывов по тематикам и тональности.
 def data_RadianBar(data):
     data = data['present']
 
@@ -183,6 +195,7 @@ def data_RadianBar(data):
     return content
 
 
+# Данные для линейного графика отображения динамики публикации отзывов по тональности
 def data_LineReviews(data):
     data = data
     pos = list()
@@ -208,17 +221,14 @@ def data_LineReviews(data):
     content = [
         {
             "id": "Позитив",
-            "color": "hsl(26, 70%, 50%)",
             "data": pos
         },
         {
             "id": "Нейтрал",
-            "color": "hsl(81, 70%, 50%)",
             "data": neu
         },
         {
             "id": "Негатив",
-            "color": "hsl(180, 70%, 50%)",
             "data": neg
         },
     ]
@@ -226,6 +236,7 @@ def data_LineReviews(data):
     return content
 
 
+# Динамика изменения рейтинга
 def data_LineRating(data):
     data_all = data['project']
     temp_all = list()
@@ -237,6 +248,8 @@ def data_LineRating(data):
     return content
 
 
+# Диаграмма-календарь. На каждой итерации вычисляем разницу между величинами, чтобы получить количество полученных
+# отзывов/оценок именно на текущую дату.
 def data_Calendar(data):
     data = data
     content_votes = list()
@@ -259,6 +272,8 @@ def data_Calendar(data):
     return content
 
 
+# Отображение самого популярного и не популярного отзыва. Вычисляем максимальное кол-во лайков и дизлайков и выводим
+# тексты, которые соответствуют этим данным.
 def data_Reviews(data):
     if data:
         item_like = list()
@@ -300,6 +315,7 @@ def data_Reviews(data):
     return content
 
 
+# Получаем данные для получения облака слов. Для графика оставляет только те слова, которые встречаются более двух раз.
 def data_Wordcloud(data):
     data = data
     temp = list()
@@ -327,6 +343,7 @@ def data_Wordcloud(data):
     return content
 
 
+# Инициализация Bert - получение слов из определенного отзыва.
 def data_Bert(content):
     kw_model = load_model()
     keywords = kw_model.extract_keywords(
@@ -340,6 +357,7 @@ def data_Bert(content):
     return keywords
 
 
+# Данные для распределения рейтинга проекта и его конкурентов.
 def data_Pie(data):
     data_all = data['project']
     data_related = data['related']
@@ -348,6 +366,3 @@ def data_Pie(data):
         content.append({'id': item[0], 'label': item[0], 'value': item[1]})
     content.append({'id': st.session_state.select, 'label': st.session_state.select, 'value': data_all[-1][0]})
     return content
-
-
-

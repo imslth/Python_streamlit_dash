@@ -2,8 +2,10 @@ import os
 import time
 import schedule
 
-schedule.every().day.at("12:57").do(lambda: os.system('scrapy runspider Parsing_developers.py'))
-schedule.every().day.at("13:15").do(lambda: os.system('scrapy runspider Parsing_dilers.py'))
+# Устанавливаем в задачник запуск двух скриптов по парсингу данных. В нашем случае используем паука scrapy без проекта
+
+schedule.every().day.at("00:01").do(lambda: os.system('scrapy runspider Parsing_developers.py'))
+schedule.every().day.at("01:05").do(lambda: os.system('scrapy runspider Parsing_dilers.py'))
 
 
 while True:

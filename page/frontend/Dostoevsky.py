@@ -2,7 +2,9 @@ from annotated_text import annotated_text
 from dostoevsky.tokenization import RegexTokenizer
 from dostoevsky.models import FastTextSocialNetworkModel
 
-
+# Функция проверки текста на тональность, а также аннотация текста с выделением положительных и негативных слов.
+# Определение тональности - https://github.com/bureaucratic-labs/dostoevsky
+# Аннотация текста - https://github.com/tvst/st-annotated-text
 def main(content):
 
     tokenizer = RegexTokenizer()

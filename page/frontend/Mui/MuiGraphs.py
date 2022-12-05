@@ -2,10 +2,13 @@ from streamlit_elements import mui, nivo
 import streamlit as st
 
 
+# Класс для отображения внутри react окон контента. Работает на https://mui.com/ - элементы интерфейса и
+# https://nivo.rocks/ - графики.
 class MuiGraphs:
 
     def __init__(self):
-
+        # Инициализируем цвета для тем - темная и светлая. Темы переключаются в зависимости от нажатия кнопки на окне
+        # (описано в Mui.py).
         self.themes = {
             "dark": {
                 "background": "#252526",
@@ -29,14 +32,40 @@ class MuiGraphs:
             }
         }
 
+    # Отображение элемента Multiselect.
     def Multiselect(self, key):
         with mui.Box(sx={"flex": 1, "minHeight": 0,
                          "padding": "5px 15px 5px 15px",
                          "borderBottom": 1,
                          "borderColor": "divider",
+                         # Цвет текста и фона
                          'background': "#252526" if st.session_state[f'{key}_st'] == 0 else "#FFFFFF",
                          'color': "#FFFFFF" if st.session_state[f'{key}_st'] == 0 else "#252526", }):
 
+            temp = list()
+            num = list()
+            # Здесь мы формируем вид, как будут отображаться проекты в Multiselect - Название проекта, Адрес проекта.
+            # По сути мы создаем множество элементов MenuItem из mui.com, в которые заносим названия проекта + адрес, а
+            # также присваиваем им какое-то цифровое значение для работы. Отображение проектов в multiselect в виде
+            # проект+адрес, но это два разных списка! Т.е. в дальнейшем нам надо будет сопоставлять выбранный проект
+            # и с названием, и с адресом.
+
+            for i in range(len(st.session_state.list)):
+                temp.append(mui.MenuItem(f'{st.session_state.list[i]}, {st.session_state.address[i]}', value=i,
+                                         variant="outlined"))
+                if st.session_state.list[i] in st.session_state.multiselect:
+                    num.append(i)
+
+            # Функция при нажатии на проект в списке, т.е. редактирование списка st.session_state_multiselect,
+            # в котором хранятся только выбранные проекты. Изначально выбраны все проекты. Если мы нажимаем впервые
+            # на какой-то проект в списке, то мы должны этот проект удалить из списка st.session_state_multiselect.
+            # Если нажимаем на него повторно - заново добавить в список st.session_state_multiselect. Здесь происходит
+            # сначала сопоставление выбранного проекта с его отображением адреса. Выбранные проекты сортируются именно
+            # по адресу. Например: у нас два проекта с названием ГАЗ, но с двумя разными адресами: Москва и Тверь.
+            # Отображение в multiselect происходит как: "ГАЗ" "Москва" и "ГАЗ" "Тверь". Чтобы понять какой именно проект
+            # выбран мы сначала в общем списке находим адрес, а уже потом по адресу и названию удаляем или добавляем в
+            # список st.session_state_multiselect нужный проект. Если бы этого не было, то все зависимые от multiselect
+            # графики отображали данные по всем "ГАЗ", которые есть в БД.
             def handle_change(event, newValue):
                 for item in st.session_state.address:
                     if item in newValue.props.children:
@@ -46,15 +75,7 @@ class MuiGraphs:
                         else:
                             st.session_state.multiselect.append(value)
 
-            temp = list()
-            num = list()
-
-            for i in range(len(st.session_state.list)):
-                temp.append(mui.MenuItem(f'{st.session_state.list[i]}, {st.session_state.address[i]}', value=i,
-                                         variant="outlined"))
-                if st.session_state.list[i] in st.session_state.multiselect:
-                    num.append(i)
-
+            # Настройка отображения полей внутри раскрывающегося списка multiselect
             ITEM_HEIGHT = 48
             ITEM_PADDING_TOP = 8
             MenuProps = {
@@ -91,6 +112,7 @@ class MuiGraphs:
                     fullWidth=False,
                     sx={'width': '100%', 'margin-top': '3%'}, variant="standard")
 
+    # Двойной слайдер для выбора отрезка времени.
     def RangeSlider(self, key):
         with mui.Box(sx={"flex": 1, "minHeight": 0,
                          "padding": "5px 15px 5px 15px",
@@ -98,6 +120,8 @@ class MuiGraphs:
                          "borderColor": "divider",
                          'background': "#252526" if st.session_state[f'{key}_st'] == 0 else "#FFFFFF",
                          'color': "#FFFFFF" if st.session_state[f'{key}_st'] == 0 else "#252526", }):
+
+            # При смене значения слайдера с любого конца мы изменяем глобальную переменную выбора даты.
             def handle_change(event, value):
                 st.session_state.range_slider_max = value[1]
                 st.session_state.range_slider_min = value[0]
@@ -116,6 +140,10 @@ class MuiGraphs:
                                },
                            )
 
+                # Т.к. слайдер работает только в диапазоне чисел (т.е. от 0 до X с шагом 1, где X - количество дней
+                # между первой датой в БД и последней), то нам необходимо эти выбранные числа как-то показать
+                # пользователю в виде даты. Здесь ниже мы создаем два объекта по краям слайдера где конвертируем
+                # числовые данные слайдера в формат yyyy-mm-dd.
                 with mui.Box(sx={"flex": 1, "minHeight": 0, "padding": "5px 15px 5px 15px",
                                  'background': "#252526" if st.session_state[f'{key}_st'] == 0 else "#FFFFFF",
                                  'color': "#FFFFFF" if st.session_state[f'{key}_st'] == 0 else "#252526"}):
@@ -138,8 +166,8 @@ class MuiGraphs:
                         spacing=1,
                     )
 
+    # Отображение таблицы с данными.
     def Table(self, content, key):
-
         with mui.Box(sx={"flex": 1, "minHeight": 0}):
             mui.DataGrid(
                 columns=content['col'],
@@ -155,6 +183,7 @@ class MuiGraphs:
                 }
             )
 
+    # Столбчатая диаграмма, где показано распределение проектов по рейтингу и кол-ву отзывов.
     def Bar(self, content, key):
         with mui.Box(sx={'flex': 1, 'minHeight': 0}):
             nivo.Bar(
@@ -204,6 +233,9 @@ class MuiGraphs:
                 role="application",
                 isFocusable=True)
 
+    # Единичный select. Здесь все параметры и логика аналогичны multiselect, за исключением того, что выбирается одно
+    # значение из списка и сохраняется в глобальную переменную. Нет вспомогательного списка, где хранятся данные о
+    # выбранных проектах.
     def Select(self, key):
         with mui.Box(sx={"flex": 1, "minHeight": 0,
                          "padding": "5px 15px 5px 15px",
@@ -212,6 +244,13 @@ class MuiGraphs:
                          'background': "#252526" if st.session_state[f'{key}_st'] == 0 else "#FFFFFF",
                          'color': "#FFFFFF" if st.session_state[f'{key}_st'] == 0 else "#252526", }):
 
+            temp = list()
+
+            for i, item in enumerate(st.session_state.selectlist):
+                temp.append(
+                    mui.MenuItem(f'{st.session_state.selectlist[i]}, {st.session_state.selectaddress[i]}', value=i))
+
+
             def handle_change(event, newValue):
                 for i, item in enumerate(st.session_state.selectaddress):
                     if item in newValue.props.children:
@@ -219,10 +258,6 @@ class MuiGraphs:
                         value = newValue.props.children.replace(item, '')[:-2]
                         st.session_state.select = value
 
-            temp = list()
-
-            for i, item in enumerate(st.session_state.selectlist):
-                temp.append(mui.MenuItem(f'{st.session_state.selectlist[i]}, {st.session_state.selectaddress[i]}', value=i))
 
             ITEM_HEIGHT = 48
             ITEM_PADDING_TOP = 8
@@ -254,6 +289,7 @@ class MuiGraphs:
                     fullWidth=False,
                     sx={'width': '100%', 'margin-top': '3%'})
 
+    # График круговой столбчатой диаграммы, где показано распределение отзывов по тематикам и тональности.
     def RadianBar(self, content, key):
         with mui.Box(sx={"flex": 1, "minHeight": 0}):
             nivo.RadialBar(
@@ -290,6 +326,7 @@ class MuiGraphs:
                     }
                 ])
 
+    # Линейный график, показывает динамику изменения рейтинга и тональности отзывов
     def Line(self, content, key):
         with mui.Box(sx={"flex": 1, "minHeight": 0}):
             nivo.Line(
@@ -357,6 +394,7 @@ class MuiGraphs:
                     }
                 ])
 
+    # График календарь
     def Calendar(self, content, key):
         with mui.Box(sx={"flex": 1, "minHeight": 0}):
             nivo.Calendar(data=content,
@@ -385,6 +423,7 @@ class MuiGraphs:
                               }
                           ])
 
+    # Отображение популярного и непопулярного отзывов просто в элементах интерфейса mui.
     def Reviews(self, content, key):
 
         with mui.Box(sx={"flex": 1, "minHeight": 0, "padding": "5px 15px 5px 15px",
@@ -458,6 +497,7 @@ class MuiGraphs:
                 spacing=2,
             )
 
+    # Круговая диаграмма, где показано распределение рейтинга конкурентов и выбранного проекта.
     def Pie(self, content, key):
         with mui.Box(sx={"flex": 1, "minHeight": 0}):
             nivo.Pie(
@@ -495,5 +535,3 @@ class MuiGraphs:
                 },
                 motionConfig="molasses",
                 theme=self.themes['dark' if st.session_state[f'{key}_st'] == 0 else 'light'])
-
-
