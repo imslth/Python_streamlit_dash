@@ -34,6 +34,7 @@ def main():
                 chooise_coordinates = st.session_state.selectcoordinates[i]
                 chooise_address = item
 
+        # Проверяем изменился ли проект. Если да, то сбрасываем счетчик выбора отзывов и отображаем нулевой
         if chooise_project != st.session_state.word_project:
             st.session_state.number = 0
             st.session_state.word_project = chooise_project
