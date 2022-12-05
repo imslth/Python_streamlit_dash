@@ -33,7 +33,11 @@ def main():
                 chooise_project = word_project.replace(item, '')[:-2]
                 chooise_coordinates = st.session_state.selectcoordinates[i]
                 chooise_address = item
-                st.session_state.number = 0
+
+        if chooise_project != st.session_state.word_project:
+            st.session_state.number = 0
+            st.session_state.word_project = chooise_project
+
 
         content = data_Wordcloud(load_reviews_wordcloud(project=chooise_project, coordinates=chooise_coordinates))
 
@@ -85,6 +89,7 @@ def main():
         Bert(content)
     else:
         pass
+
 
 
 if __name__ == '__main__':

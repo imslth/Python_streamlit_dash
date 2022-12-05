@@ -121,6 +121,8 @@ def main():
         st.session_state.select_coordinates = st.session_state.coordinates[0]
         st.session_state.count_text = data_load_project_select['text_present']
 
+        st.session_state.word_project = st.session_state.selectlist[0]
+
         # Здесь мы выгружаем и устанавливаем в кеш инфу о кол-ве конкурирующих комплексов
         data_load_yandex_related = Base().all_project_related(table=f'{st.session_state.option}_related',
                                                               date_present=st.session_state.date_present.strftime(
@@ -162,7 +164,6 @@ def main():
 
         st.session_state.selectlist = data_load_project_select['project_present']
 
-        st.session_state.number = 0
 
 
 if __name__ == '__main__':
