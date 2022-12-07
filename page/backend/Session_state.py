@@ -161,6 +161,8 @@ def main():
                                                       date_present=st.session_state.max_time)
 
         st.session_state.list = data_load_project_multiselect['project_present']
+        st.session_state.address = data_load_project_multiselect['address_present']
+        st.session_state.coordinates = data_load_project_multiselect['coordinates_present']
 
         st.session_state.selectlist = data_load_project_select['project_present']
 
