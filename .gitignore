@@ -9,4 +9,4 @@ __pycache__
  page/frontend/Highcharts/__pycache__
  page/frontend/Mui/__pycache__
  page/frontend/__pycache__/
- db_edit
+ page/backend/Types_parsing.py

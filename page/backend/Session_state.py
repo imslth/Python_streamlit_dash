@@ -1,6 +1,7 @@
 import streamlit as st
 from .Databased import Base
 import datetime
+from argon2 import PasswordHasher
 
 
 # Функция для заполнения кэша streamlit. Это необходимо, чтобы пользоваться одними переменными во всем коде и на всех
@@ -11,22 +12,79 @@ def main():
     # страницу в зависимости от выбора направления - если мы выбираем карты о ЖК, то мы должны передавать координаты
     # именно жилых комплексов и т.д. St.session_state.opinion как раз отвечает за это - этот параметр обычно дальше в
     # коде передается как название таблицы, которую надо выгрузить из БД.
-    if st.session_state['Pages_p_Maps Developers'] or st.session_state['Pages_p_Dashboard Developers'] or \
-            st.session_state['Pages_p_Reviews Developers'] or st.session_state[
-        'Pages_p_Add Developer'] == True:
-        st.session_state.option = 'yandex'
 
-    if st.session_state['Pages_p_Maps Dilers'] or st.session_state['Pages_p_Dashboard Dilers'] or st.session_state[
-        'Pages_p_Reviews Dilers'] or st.session_state[
-        'Pages_p_Add Diler'] == True:
-        st.session_state.option = 'dilers_yandex'
+    # st.session_state['user_login'] - под каким доступом зашли в систему. Каждый логин получает только часть информации
+
+    if st.session_state['user_login'] == 'Developer' or st.session_state['user_login'] == 'dhlybov' or st.session_state[
+        'user_login'] == 'admin':
+
+        if st.session_state['Pages_p_Maps Developers'] or st.session_state['Pages_p_Dashboard Developers'] or \
+                st.session_state['Pages_p_Reviews Developers'] or st.session_state[
+            'Pages_p_Add Developer'] == True:
+            st.session_state.option = 'yandex'
+
+    if st.session_state['user_login'] == 'Diler' or st.session_state['user_login'] == 'dhlybov' or st.session_state[
+        'user_login'] == 'admin':
+
+        if st.session_state['Pages_p_Maps Chery'] or st.session_state['Pages_p_Dashboard Chery'] or st.session_state[
+            'Pages_p_Reviews Chery'] or st.session_state[
+            'Pages_p_Add Chery'] == True:
+            st.session_state.option = 'chery_yandex'
+
+        if st.session_state['Pages_p_Maps Exeed'] or st.session_state['Pages_p_Dashboard Exeed'] or st.session_state[
+            'Pages_p_Reviews Exeed'] or st.session_state[
+            'Pages_p_Add Exeed'] == True:
+            st.session_state.option = 'exeed_yandex'
+
+        if st.session_state['Pages_p_Maps FAW'] or st.session_state['Pages_p_Dashboard FAW'] or st.session_state[
+            'Pages_p_Reviews FAW'] or st.session_state[
+            'Pages_p_Add FAW'] == True:
+            st.session_state.option = 'faw_yandex'
+
+        if st.session_state['Pages_p_Maps Gaz'] or st.session_state['Pages_p_Dashboard Gaz'] or st.session_state[
+            'Pages_p_Reviews Gaz'] or st.session_state[
+            'Pages_p_Add Gaz'] == True:
+            st.session_state.option = 'gaz_yandex'
+
+        if st.session_state['Pages_p_Maps Uaz'] or st.session_state['Pages_p_Dashboard Uaz'] or st.session_state[
+            'Pages_p_Reviews Uaz'] or st.session_state[
+            'Pages_p_Add Uaz'] == True:
+            st.session_state.option = 'uaz_yandex'
+
+        if st.session_state['Pages_p_Maps Geely'] or st.session_state['Pages_p_Dashboard Geely'] or st.session_state[
+            'Pages_p_Reviews Geely'] or st.session_state[
+            'Pages_p_Add Geely'] == True:
+            st.session_state.option = 'geely_yandex'
+
+        if st.session_state['Pages_p_Maps Haval'] or st.session_state['Pages_p_Dashboard Haval'] or st.session_state[
+            'Pages_p_Reviews Haval'] or st.session_state[
+            'Pages_p_Add Haval'] == True:
+            st.session_state.option = 'haval_yandex'
+
+        if st.session_state['Pages_p_Maps Hyundai'] or st.session_state['Pages_p_Dashboard Hyundai'] or \
+                st.session_state[
+                    'Pages_p_Reviews Hyundai'] or st.session_state[
+            'Pages_p_Add Hyundai'] == True:
+            st.session_state.option = 'hyundai_yandex'
+
+        if st.session_state['Pages_p_Maps JAC'] or st.session_state['Pages_p_Dashboard JAC'] or st.session_state[
+            'Pages_p_Reviews JAC'] or st.session_state[
+            'Pages_p_Add JAC'] == True:
+            st.session_state.option = 'jac_yandex'
+
+    if st.session_state['user_login'] == 'Farm' or st.session_state['user_login'] == 'dhlybov' or st.session_state[
+        'user_login'] == 'admin':
+
+        if st.session_state['Pages_p_Maps RSM'] or st.session_state['Pages_p_Dashboard RSM'] or st.session_state[
+            'Pages_p_Reviews RSM'] or st.session_state[
+            'Pages_p_Add RSM'] == True:
+            st.session_state.option = 'rsm_yandex'
 
     # Здесь реализуется проверка состояния - находимся ли мы еще на странице о ЖК или уже переключились на страницу о
     # дилерах. Также стоит учитывать, что страница dashboard реализована на js и react компонентах, которые за одну
     # загрузку страницы перезагружают её 2-3 раза. Переменная st.session_state.prev_state показывает предыдущее
     # состояние страницы - о чем она была (жк или дилеры), переменная st.session_state.opinion показывает текущую
     # страницу (жк или дилеры). Переменная st.session_state.state показывает количество загрузок страниц одной стадии.
-
 
     # При первой загрузке сайта предыдущая стадия равна текущей.
     if 'prev_state' not in st.session_state:
@@ -48,7 +106,6 @@ def main():
     # Если счетчик загрузок страниц равен 0 (т.е. если сайт открыли впервые или переключили с ЖК на дилеров и обратно),
     # то мы в кэш заносим все данные о ЖК или дилерах (в зависимости от выбранной страницы).
     if st.session_state.state == 0:
-
         # Функция получения максимальной и минимальной даты в БД по типу выбранной страницы (st.session_state.option
         # показывает загружена страница о ЖК или о дилерах).
         data = Base().min_max_date(table=f'{st.session_state.option}_all')
@@ -60,7 +117,6 @@ def main():
 
         min_time = datetime.datetime(int(data['min'].split('-')[0]), int(data['min'].split('-')[1]),
                                      int(data['min'].split('-')[2]))
-
 
         maxdays = max_time - min_time
 
@@ -133,6 +189,9 @@ def main():
 
         st.session_state.number = 0
 
+        # Отображение конкурентов на карте изначально выключено
+        st.session_state.related = False
+
     # Если происходит повторная загрузка страницы с одним типом (мы перешли из карты дилеров в дашборд дилеров,
     # например), то нам необязательно обновлять все данные в кэше - нужно обновить только самые необходимые.
     if st.session_state.state > 0:
@@ -166,6 +225,8 @@ def main():
 
         st.session_state.selectlist = data_load_project_select['project_present']
 
+        # Отображение конкурентов на карте изначально выключено
+        st.session_state.related = False
 
 
 if __name__ == '__main__':

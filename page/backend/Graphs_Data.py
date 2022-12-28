@@ -201,20 +201,21 @@ def data_LineReviews(data):
     pos = list()
     neu = list()
     neg = list()
-    df = pandas.DataFrame(data, columns=['positive', 'neutral', 'negative', 'now'])
+    df = pandas.DataFrame(data, columns=['positive', 'neutral', 'negative', 'now']).sort_values(by=['now'])
     df_new = df.set_index('now', drop=False)
     for item in df_new['now'].unique():
         df_temp = df_new.loc[item]
+        # Добавлена проверка типа - padnas или series приходит на вход.
         pos.append({
-            "x": df_temp['now'][0],
+            "x": df_temp['now'][0] if len(df_temp.shape) == 2 else df_temp['now'],
             "y": int(df_temp['positive'].sum())
         })
         neu.append({
-            "x": df_temp['now'][0],
+            "x": df_temp['now'][0] if len(df_temp.shape) == 2 else df_temp['now'],
             "y": int(df_temp['neutral'].sum())
         })
         neg.append({
-            "x": df_temp['now'][0],
+            "x": df_temp['now'][0] if len(df_temp.shape) == 2 else df_temp['now'],
             "y": int(df_temp['negative'].sum())
         })
 
@@ -364,5 +365,9 @@ def data_Pie(data):
     content = list()
     for item in data_related:
         content.append({'id': item[0], 'label': item[0], 'value': item[1]})
-    content.append({'id': st.session_state.select, 'label': st.session_state.select, 'value': data_all[-1][0]})
+    # Добавлено исключение, когда приходит пустой список с конкурентам (их просто нет)
+    try:
+        content.append({'id': st.session_state.select, 'label': st.session_state.select, 'value': data_all[-1][0]})
+    except:
+        content.append({'id': st.session_state.select, 'label': st.session_state.select, 'value': None})
     return content

@@ -39,21 +39,24 @@ def main():
             st.session_state.number = 0
             st.session_state.word_project = chooise_project
 
-
         content = data_Wordcloud(load_reviews_wordcloud(project=chooise_project, coordinates=chooise_coordinates))
 
         # Проверка - существуют ли отзывы в БД по проекту. Если да - грузим облако слов, если нет - заглушка.
         if content:
             Wordcloud(content, chooise_project)
+
         else:
             st.markdown(f'По проекту {chooise_project}, {chooise_address} отзывов не обнаружено')
 
     # Проверка - существуют ли отзывы в БД по проекту. Если да - грузим отзывы и ключи, если нет - заглушка.
     if content:
         st.markdown(
-            f'Ниже отображен отзыв с выделением положительных и негативных слов, характеризующих текст. Фразы получены с помощью библиотеки обработки естественного языка Dostoevsky.')
-        st.markdown(
-            f'Также ниже отображены ключевые слова, описывающие выбранный отзыв. Фразы получены с помощью нейросети Bert.')
+            '''Ниже отображен отзыв с выделением положительных и негативных слов, характеризующих текст. Фразы 
+            получены с помощью библиотеки обработки естественного языка Dostoevsky.
+            <p> Также ниже отображены ключевые слова, описывающие выбранный отзыв. Фразы получены с помощью 
+            нейросети Bert. 
+            ''',
+            unsafe_allow_html=True)
 
         content_Bert = load_reviews(table=f'{st.session_state.option}_reviews',
                                     project=chooise_project, coordinates=chooise_coordinates)
@@ -90,7 +93,6 @@ def main():
         Bert(content)
     else:
         pass
-
 
 
 if __name__ == '__main__':
